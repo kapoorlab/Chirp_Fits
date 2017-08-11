@@ -22,7 +22,7 @@ import chirpModels.UserChirpModel;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
-public class FunctionFitter extends SwingWorker<Void, Void> {
+public class FunctionFitterRunnable implements Runnable {
 	
 	final InteractiveChirpFit parent;
 	final ArrayList<Pair<Double, Double>> timeseries;
@@ -91,7 +91,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 	 * deltat = spacing in time between succeding points
 	 */
 	
-	public FunctionFitter(final InteractiveChirpFit parent, final ArrayList<Pair<Double, Double>> timeseries, UserChirpModel model, final int fileindex,
+	public FunctionFitterRunnable(final InteractiveChirpFit parent, final ArrayList<Pair<Double, Double>> timeseries, UserChirpModel model, final int fileindex,
 			final int totalfiles){
 		
 		this.parent = parent;
@@ -112,7 +112,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 	}
 
 	@Override
-	protected Void doInBackground() throws Exception {
+	public void run() {
 		
 		// Run the gradient descent using Chirp function fit
 		double[] T = new double[timeseries.size()];
@@ -189,43 +189,21 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
 		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
-		       
-		return null;
+		      
+		
 	}
 
 	
 	
-	@Override
-	protected void done() {
-		try {
-			
-			
-				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
-			 + parent.nf.format(6.28/((LMparam[timeseries.size()]) * 60)) + "  " +  "High Frequency  (hrs): " 
-						 + parent.nf.format(6.28/((LMparam[timeseries.size() + 1]) * 60) ));
-				 legendText.setPosition(RectangleEdge.RIGHT);
-				 parent.chart.addSubtitle(legendText);
-				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
-				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
-			
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			parent.jpb.setIndeterminate(false);
-			try {
-				this.get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	public double[] result(){
+		
+		return LMparam;
+	}
 		
 
-	}
+	
+
+	
 	
 	
 	

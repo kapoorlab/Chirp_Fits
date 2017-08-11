@@ -1,6 +1,7 @@
 package Fitting.TimeSeries;
 
 import java.awt.BorderLayout;
+import java.awt.Button;
 import java.awt.CardLayout;
 import java.awt.Checkbox;
 import java.awt.Color;
@@ -35,7 +36,9 @@ import javax.swing.table.DefaultTableModel;
 
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleEdge;
 
 import chirpModels.UserChirpModel;
 import ij.IJ;
@@ -46,6 +49,8 @@ import listeners.AutoListener;
 import listeners.Enablehigh;
 import listeners.HighFrequencyListener;
 import listeners.LowFrequencyListener;
+import listeners.MakehistListener;
+import listeners.NumbinsListener;
 import listeners.WidthListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -60,13 +65,14 @@ public class InteractiveChirpFit implements PlugIn {
 	public static int standardSensitivity = 4;
 	public int sensitivity = standardSensitivity;
 	public ArrayList<Pair<Double, Double>> timeseries;
+	public ArrayList<Pair<Double, Double>> frequchirphist;
 	// for scrollbars
 	int FrequInt, ChirpInt, PhaseInt, BackInt;
 
 	public boolean isDone;
 	public static int MIN_SLIDER = 0;
 	public static int MAX_SLIDER = 500;
-	int row;
+	public int row;
 	public static double MIN_FREQU = 0.0;
 	public static double MAX_FREQU = 30.0;
 
@@ -78,6 +84,7 @@ public class InteractiveChirpFit implements PlugIn {
 	public double phase = 0;
 	public double back = 0;
 
+	public int numBins = 10;
 	public JProgressBar jpb;
 	public JLabel label = new JLabel("Fitting..");
 	public int Progressmin = 0;
@@ -95,6 +102,9 @@ public class InteractiveChirpFit implements PlugIn {
 	public JLabel inputLabelwidth;
 	public TextField inputFieldwidth;
 
+	public JLabel inputLabelBins;
+	public TextField inputFieldBins;
+	
 	public InteractiveChirpFit(final File[] file) {
 
 		this.inputfiles = file;
@@ -106,6 +116,7 @@ public class InteractiveChirpFit implements PlugIn {
 	}
 
 	public void run(String arg0) {
+		frequchirphist = new ArrayList<Pair<Double, Double>>();
 		rtAll = new ResultsTable();
 		jpb = new JProgressBar();
 
@@ -138,7 +149,8 @@ public class InteractiveChirpFit implements PlugIn {
 
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-
+        scrollPane.setPreferredSize(new Dimension(200, 200));
+		
 		panelCont.setLayout(cl);
 
 		panelCont.add(panelFirst, "1");
@@ -156,10 +168,16 @@ public class InteractiveChirpFit implements PlugIn {
 		final Label FREQULabel = new Label("Lower Frequency (hrs) = " + nf.format(this.Lowfrequ), Label.CENTER);
 		final Label CHIRPLabel = new Label("Higher Frequency (hrs) = " + nf.format(this.Highfrequ), Label.CENTER);
 		final JButton AutoFit = new JButton("Auto-Fit all files");
+		final Button Frequhist = new Button("Frequency Histogram");
 		inputLabelwidth = new JLabel("Enter expected peak width in hours");
 		inputFieldwidth = new TextField();
 		inputFieldwidth.setColumns(5);
 		inputFieldwidth.setText(String.valueOf(1.5));
+		
+		inputLabelBins = new JLabel("Set number of Bins");
+		inputFieldBins = new TextField();
+		inputFieldBins.setColumns(5);
+		inputFieldBins.setText(String.valueOf(numBins));
 
 		Highfrequ = Lowfrequ - Float.parseFloat(inputFieldwidth.getText());
 
@@ -194,6 +212,20 @@ public class InteractiveChirpFit implements PlugIn {
 		c.insets = new Insets(10, 10, 10, 0);
 		panelFirst.add(AutoFit, c);
 
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(inputLabelBins, c);
+
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(inputFieldBins, c);
+		
+		++c.gridy;
+		c.insets = new Insets(20, 120, 0, 120);
+		panelFirst.add(Frequhist, c);
+		
+		
+		
 		table.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 
@@ -211,8 +243,10 @@ public class InteractiveChirpFit implements PlugIn {
 
 		FREQU.addAdjustmentListener(new LowFrequencyListener(this, FREQULabel, FREQU));
 		CHIRP.addAdjustmentListener(new HighFrequencyListener(this, CHIRPLabel, CHIRP));
-		AutoFit.addActionListener(new AutoListener(this, row));
+		AutoFit.addActionListener(new AutoListener(this));
+		Frequhist.addActionListener(new MakehistListener(this, numBins));
 		inputFieldwidth.addTextListener(new WidthListener(this));
+		inputFieldBins.addTextListener(new NumbinsListener(this));
 
 		Cardframe.add(panelCont, BorderLayout.CENTER);
 		Cardframe.add(jpb, BorderLayout.PAGE_END);
@@ -232,6 +266,7 @@ public class InteractiveChirpFit implements PlugIn {
 		this.dataset = new XYSeriesCollection();
 		this.chart = Mainpeakfitter.makeChart(dataset, "Cell Intensity", "Timepoint", "Normalized Intensity");
 		this.jFreeChartFrame = Mainpeakfitter.display(chart, new Dimension(800, 800));
+		
 		row = trackindex;
 		updateCHIRP();
 
@@ -254,14 +289,29 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public void updateCHIRPmute() {
 
-		FunctionFitter chirp = new FunctionFitter(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
+		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));
 		chirp.setHighfrequency(2 * Math.PI / (Highfrequ * 60));
 
 		
 		chirp.run();
-
+		double[] LMparam = chirp.result();
+		
+		 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+	  			 + nf.format(6.28/((LMparam[timeseries.size()]) * 60)) + "  " +  "High Frequency  (hrs): " 
+	  						 + nf.format(6.28/((LMparam[timeseries.size() + 1]) * 60) ));
+	  				 legendText.setPosition(RectangleEdge.RIGHT);
+	  				 if (chart!=null){
+	  				 chart.addSubtitle(legendText);
+	  				 String name = inputfile.getParent() + "//" +  inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+	  				try {
+						ChartUtilities.saveChartAsPNG(new File(name + ".png"),  chart, 800, 800);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	  				 }
 	}
 
 	public void updateCHIRP() {

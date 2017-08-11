@@ -15,7 +15,7 @@ public class Chirp_Fit implements PlugIn {
 
 			    JFrame frame = new JFrame("");
 			   ChirpFileChooser panel = new ChirpFileChooser();
-			  
+			 
 			    frame.getContentPane().add(panel,"Center");
 			    frame.setSize(panel.getPreferredSize());
 			    

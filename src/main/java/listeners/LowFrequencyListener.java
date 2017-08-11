@@ -16,7 +16,7 @@ public class LowFrequencyListener implements AdjustmentListener {
 		
 		this.parent = parent;
 		this.label = label;
-		bar.addMouseListener(new StandardMouseListener(parent));
+		bar.addMouseListener(new StandardMousieListener(parent));
 		
 	}
 	@Override

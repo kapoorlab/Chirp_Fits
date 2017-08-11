@@ -11,18 +11,18 @@ import Fitting.TimeSeries.InteractiveChirpFit;
  * @author spreibi
  *
  */
-public class StandardMouseListener implements MouseListener
+public class StandardMousieListener implements MouseListener
 {
 	final InteractiveChirpFit parent;
 
-	public StandardMouseListener( final InteractiveChirpFit parent )
+	public StandardMousieListener( final InteractiveChirpFit parent )
 	{
 		this.parent = parent;
 	}
 	@Override
 	public void mouseReleased( MouseEvent arg0 )
 	{
-		
+		try { Thread.sleep( 10 ); } catch ( InterruptedException e ) {}
 		parent.updateCHIRP();
 	}
 	@Override
