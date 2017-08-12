@@ -34,20 +34,17 @@ import net.imglib2.util.ValuePair;
 public class MakehistListener implements ActionListener {
 
 	final InteractiveChirpFit parent;
-	final int numBins;
 	protected double min, max;
 
-	public MakehistListener(final InteractiveChirpFit parent, final int numBins) {
+	public MakehistListener(final InteractiveChirpFit parent) {
 
 		this.parent = parent;
-		this.numBins = numBins;
 	}
 
 	@Override
 	public void actionPerformed(final ActionEvent arg0) {
 
 		makehistogram();
-		System.out.println(numBins);
 	}
 
 	public void makehistogram() {
@@ -150,16 +147,16 @@ public class MakehistListener implements ActionListener {
 		final double size = max - min + 0.000001;
 
 		// bin and count the entries
-		final int[] bins = new int[numBins];
+		final int[] bins = new int[parent.numBins];
 
 		for (final double v : data)
-			++bins[(int) Math.floor(((v - min) / size) * numBins)];
+			++bins[(int) Math.floor(((v - min) / size) * parent.numBins)];
 
 		// make the list of bins
 		final ArrayList<ValuePair<Double, Integer>> hist = new ArrayList<ValuePair<Double, Integer>>();
 
-		final double binSize = size / numBins;
-		for (int bin = 0; bin < numBins; ++bin)
+		final double binSize = size / parent.numBins;
+		for (int bin = 0; bin < parent.numBins; ++bin)
 			hist.add(new ValuePair<Double, Integer>(min + binSize / 2 + binSize * bin, bins[bin]));
 
 		return hist;
