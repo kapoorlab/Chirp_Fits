@@ -116,7 +116,7 @@ public class LevenbergMarquardtSolverChirp {
 			} //npts
 		
 
-			FitterUtils.SetProgressBarTime(jpb, iter, percent, fileindex + 1, totalfiles);
+			FitterUtils.SetProgressBarTime(jpb, iter, percent, fileindex + 1, totalfiles - 1);
 			// solve H d = -g, evaluate error at new location
 			//double[] d = DoubleMatrix.solve(H, g);
 			double[] d = null;

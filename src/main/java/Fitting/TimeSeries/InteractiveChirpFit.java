@@ -174,7 +174,7 @@ public class InteractiveChirpFit implements PlugIn {
 		inputFieldwidth.setColumns(5);
 		inputFieldwidth.setText(String.valueOf(1.5));
 		
-		inputLabelBins = new JLabel("Set number of Bins");
+		inputLabelBins = new JLabel("Set number of Bins, presss enter to display mean Frequency histogram");
 		inputFieldBins = new TextField();
 		inputFieldBins.setColumns(5);
 		inputFieldBins.setText(String.valueOf(numBins));
@@ -191,14 +191,14 @@ public class InteractiveChirpFit implements PlugIn {
 		++c.gridy;
 		c.insets = new Insets(10, 10, 0, 50);
 		panelFirst.add(scrollPane, c);
-
+		++c.gridy;
+		c.insets = new Insets(10, 10, 0, 50);
+		panelFirst.add(FREQULabel, c);
 		++c.gridy;
 		c.insets = new Insets(10, 10, 0, 50);
 		panelFirst.add(FREQU, c);
 
-		++c.gridy;
-		c.insets = new Insets(10, 10, 0, 50);
-		panelFirst.add(FREQULabel, c);
+		
 
 		++c.gridy;
 		c.insets = new Insets(10, 10, 10, 0);
@@ -220,9 +220,9 @@ public class InteractiveChirpFit implements PlugIn {
 		c.insets = new Insets(10, 10, 10, 0);
 		panelFirst.add(inputFieldBins, c);
 		
-		++c.gridy;
-		c.insets = new Insets(20, 120, 0, 120);
-		panelFirst.add(Frequhist, c);
+	//	++c.gridy;
+	//	c.insets = new Insets(20, 120, 0, 120);
+	//	panelFirst.add(Frequhist, c);
 		
 		
 		
@@ -244,7 +244,7 @@ public class InteractiveChirpFit implements PlugIn {
 		FREQU.addAdjustmentListener(new LowFrequencyListener(this, FREQULabel, FREQU));
 		CHIRP.addAdjustmentListener(new HighFrequencyListener(this, CHIRPLabel, CHIRP));
 		AutoFit.addActionListener(new AutoListener(this));
-		Frequhist.addActionListener(new MakehistListener(this, numBins));
+	//	Frequhist.addActionListener(new MakehistListener(this, numBins));
 		inputFieldwidth.addTextListener(new WidthListener(this));
 		inputFieldBins.addTextListener(new NumbinsListener(this));
 

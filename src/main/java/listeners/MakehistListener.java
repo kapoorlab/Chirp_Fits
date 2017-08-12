@@ -47,12 +47,14 @@ public class MakehistListener implements ActionListener {
 	public void actionPerformed(final ActionEvent arg0) {
 
 		makehistogram();
+		System.out.println(numBins);
 	}
 
 	public void makehistogram() {
 		final XYSeriesCollection dataset = new XYSeriesCollection();
 		List<Double> Lowfrequvalues = new ArrayList<Double>();
 		List<Double> Highfrequvalues = new ArrayList<Double>();
+		List<Double> Meanfrequvalues = new ArrayList<Double>();
 		XYSeries seriesname = new XYSeries("Frequency Histogram");
 
 		for (final Pair<Double, Double> key : parent.frequchirphist) {
@@ -60,21 +62,24 @@ public class MakehistListener implements ActionListener {
 			seriesname.add(key.getA(), key.getB());
 			Lowfrequvalues.add(key.getA());
 			Highfrequvalues.add(key.getB());
+			Meanfrequvalues.add((key.getA() + key.getB()) / 2);
 
 		}
 
 		dataset.addSeries(seriesname);
 
-		final JFreeChart histLowchart = makehistXChart(Lowfrequvalues, numBins);
-		final JFreeChart histHighchart = makehistYChart(Highfrequvalues, numBins);
-
-		display(histLowchart, new Dimension(500, 500));
-		display(histHighchart, new Dimension(500, 500));
+		
+		final JFreeChart histMeanchart = makehistChart(Meanfrequvalues, "Histogram", "MeanFrequ", "Count");
+		display(histMeanchart, new Dimension(500, 500));
+		
 
 	}
 
-	public JFreeChart makehistXChart(final List<Double> Xdataset, final int numBins) {
-		return makehistXChart(Xdataset, "Histogram", "LowFrequ", "Count", numBins);
+	
+	
+	
+	public JFreeChart makehistXChart(final List<Double> Xdataset) {
+		return makehistXChart(Xdataset, "Histogram", "LowFrequ", "Count");
 	}
 
 	public static ValuePair<Double, Double> getMinMax(final List<Double> data) {
@@ -90,14 +95,14 @@ public class MakehistListener implements ActionListener {
 		return new ValuePair<Double, Double>(min, max);
 	}
 
-	public IntervalXYDataset createDataset(final List<Double> values, final int numBins, final String title) {
+	public IntervalXYDataset createDataset(final List<Double> values, final String title) {
 		final XYSeries series = new XYSeries(title);
 
 		final ValuePair<Double, Double> minmax = getMinMax(values);
 		this.min = minmax.getA();
 		this.max = minmax.getB();
 
-		final List<ValuePair<Double, Integer>> hist = binData(values, min, max, numBins);
+		final List<ValuePair<Double, Integer>> hist = binData(values, min, max);
 
 		for (final ValuePair<Double, Integer> pair : hist)
 			series.add(pair.getA(), pair.getB());
@@ -108,32 +113,39 @@ public class MakehistListener implements ActionListener {
 		return dataset;
 	}
 
-	public JFreeChart makehistXChart(final List<Double> Xdataset, final String title, final String x, final String y,
-			final int numBins) {
+	public JFreeChart makehistChart(final List<Double> Xdataset, final String title, final String x, final String y) {
 
-		final IntervalXYDataset SigmaXdataset = createDataset(Xdataset, numBins, title);
+		final IntervalXYDataset SigmaXdataset = createDataset(Xdataset, title);
+
+		final JFreeChart sigmaXchart = createChart(SigmaXdataset, title, x);
+
+		return sigmaXchart;
+	}
+	
+	public JFreeChart makehistXChart(final List<Double> Xdataset, final String title, final String x, final String y) {
+
+		final IntervalXYDataset SigmaXdataset = createDataset(Xdataset, title);
 
 		final JFreeChart sigmaXchart = createChart(SigmaXdataset, title, x);
 
 		return sigmaXchart;
 	}
 
-	public JFreeChart makehistYChart(final List<Double> Ydataset, final int numBins) {
-		return makehistXChart(Ydataset, "Histogram", "HighFrequ", "Count", numBins);
+	public JFreeChart makehistYChart(final List<Double> Ydataset) {
+		return makehistXChart(Ydataset, "Histogram", "HighFrequ", "Count");
 	}
 
 	public JFreeChart makehistYChart(final List<Double> Ydataset, final String title, final String x, final String y,
 			final int numBins) {
 
-		final IntervalXYDataset SigmaYdataset = createDataset(Ydataset, numBins, title);
+		final IntervalXYDataset SigmaYdataset = createDataset(Ydataset,  title);
 
 		final JFreeChart sigmaYchart = createChart(SigmaYdataset, title, x);
 
 		return sigmaYchart;
 	}
 
-	public static List<ValuePair<Double, Integer>> binData(final List<Double> data, final double min, final double max,
-			final int numBins) {
+	public  List<ValuePair<Double, Integer>> binData(final List<Double> data, final double min, final double max) {
 		// avoid the one value that is exactly 100%
 		final double size = max - min + 0.000001;
 
@@ -162,7 +174,7 @@ public class MakehistListener implements ActionListener {
 	}
 
 	protected JFreeChart createChart(final IntervalXYDataset dataset, final String title, final String units) {
-		final JFreeChart chart = ChartFactory.createXYBarChart(title, "Pixel [" + units + "]", false, "Count", dataset,
+		final JFreeChart chart = ChartFactory.createXYBarChart(title,  units +  "[hours]", false, "Count", dataset,
 				PlotOrientation.VERTICAL, false, // legend
 				false, false);
 
