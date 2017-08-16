@@ -6,6 +6,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JOptionPane;
+
 import Fitting.TimeSeries.ExtractSeries;
 import Fitting.TimeSeries.InteractiveChirpFit;
 import Fitting.TimeSeries.Split;
@@ -31,7 +33,8 @@ public class AutoListener implements ActionListener {
 		
 		}
         taskexecutor.shutdown();
-		
+        JOptionPane.showMessageDialog(parent.jpb.getParent(), "Success", "Success",
+    			 JOptionPane.INFORMATION_MESSAGE);
 		
 	}
 	

@@ -16,14 +16,13 @@ public class LowFrequencyListener implements AdjustmentListener {
 		
 		this.parent = parent;
 		this.label = label;
-		bar.addMouseListener(new StandardMousieListener(parent));
 		
 	}
 	@Override
 	
 	public void adjustmentValueChanged( final AdjustmentEvent event )
 	{
-		
+		if (parent.dataset!=null)
 		parent.dataset.removeAllSeries();
 		parent.Lowfrequ = InteractiveChirpFit.computeValueFromScrollbarPosition(
 				event.getValue(),

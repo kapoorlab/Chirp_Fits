@@ -47,6 +47,7 @@ import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import listeners.AutoListener;
 import listeners.Enablehigh;
+import listeners.FitListener;
 import listeners.HighFrequencyListener;
 import listeners.LowFrequencyListener;
 import listeners.MakehistListener;
@@ -149,7 +150,10 @@ public class InteractiveChirpFit implements PlugIn {
 
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		
+		
         scrollPane.setPreferredSize(new Dimension(200, 200));
+        scrollPane.setMinimumSize(new Dimension(200, 200));
 		
 		panelCont.setLayout(cl);
 
@@ -168,6 +172,7 @@ public class InteractiveChirpFit implements PlugIn {
 		final Label FREQULabel = new Label("Lower Frequency (hrs) = " + nf.format(this.Lowfrequ), Label.CENTER);
 		final Label CHIRPLabel = new Label("Higher Frequency (hrs) = " + nf.format(this.Highfrequ), Label.CENTER);
 		final JButton AutoFit = new JButton("Auto-Fit all files");
+		final JButton Fit = new JButton("Fit current file");
 		final Button Frequhist = new Button("Frequency Histogram");
 		inputLabelwidth = new JLabel("Enter expected peak width in hours");
 		inputFieldwidth = new TextField();
@@ -198,7 +203,7 @@ public class InteractiveChirpFit implements PlugIn {
 		c.insets = new Insets(10, 10, 0, 50);
 		panelFirst.add(FREQU, c);
 
-		
+	
 
 		++c.gridy;
 		c.insets = new Insets(10, 10, 10, 0);
@@ -207,7 +212,11 @@ public class InteractiveChirpFit implements PlugIn {
 		++c.gridy;
 		c.insets = new Insets(10, 10, 10, 0);
 		panelFirst.add(inputFieldwidth, c);
-
+	
+		//++c.gridy;
+		//c.insets = new Insets(10, 10, 10, 0);
+		//panelFirst.add(Fit, c);
+		
 		++c.gridy;
 		c.insets = new Insets(10, 10, 10, 0);
 		panelFirst.add(AutoFit, c);
@@ -243,6 +252,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 		FREQU.addAdjustmentListener(new LowFrequencyListener(this, FREQULabel, FREQU));
 		CHIRP.addAdjustmentListener(new HighFrequencyListener(this, CHIRPLabel, CHIRP));
+		Fit.addActionListener(new FitListener(this));
 		AutoFit.addActionListener(new AutoListener(this));
 		Frequhist.addActionListener(new MakehistListener(this));
 		inputFieldwidth.addTextListener(new WidthListener(this));
@@ -265,7 +275,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 		this.dataset = new XYSeriesCollection();
 		this.chart = Mainpeakfitter.makeChart(dataset, "Cell Intensity", "Timepoint", "Normalized Intensity");
-		this.jFreeChartFrame = Mainpeakfitter.display(chart, new Dimension(800, 800));
+		this.jFreeChartFrame = Mainpeakfitter.display(chart, new Dimension(600, 600));
 		
 		row = trackindex;
 		updateCHIRP();
@@ -280,7 +290,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 		this.dataset = new XYSeriesCollection();
 		this.chart = Mainpeakfitter.makeChart(dataset, "Cell Intensity", "Timepoint", "Normalized Intensity");
-		this.jFreeChartFrame = Mainpeakfitter.display(chart, new Dimension(800, 800));
+		this.jFreeChartFrame = Mainpeakfitter.display(chart, new Dimension(600, 600));
 
 		row = trackindex;
 		updateCHIRPmute();
