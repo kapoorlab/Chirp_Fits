@@ -51,6 +51,7 @@ import listeners.FitListener;
 import listeners.HighFrequencyListener;
 import listeners.LowFrequencyListener;
 import listeners.MakehistListener;
+import listeners.NumIterListener;
 import listeners.NumbinsListener;
 import listeners.WidthListener;
 import net.imglib2.util.Pair;
@@ -86,6 +87,7 @@ public class InteractiveChirpFit implements PlugIn {
 	public double back = 0;
 
 	public int numBins = 10;
+	public int maxiter = 1500;
 	public JProgressBar jpb;
 	public JLabel label = new JLabel("Fitting..");
 	public int Progressmin = 0;
@@ -105,6 +107,9 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public JLabel inputLabelBins;
 	public TextField inputFieldBins;
+	
+	public JLabel inputLabelIter;
+	public TextField inputFieldIter;
 	
 	public InteractiveChirpFit(final File[] file) {
 
@@ -183,6 +188,11 @@ public class InteractiveChirpFit implements PlugIn {
 		inputFieldBins = new TextField();
 		inputFieldBins.setColumns(5);
 		inputFieldBins.setText(String.valueOf(numBins));
+		
+		inputLabelIter = new JLabel("Set max iteration number");
+		inputFieldIter = new TextField();
+		inputFieldIter.setColumns(5);
+		inputFieldIter.setText(String.valueOf(maxiter));
 
 		Highfrequ = Lowfrequ - Float.parseFloat(inputFieldwidth.getText());
 
@@ -213,6 +223,14 @@ public class InteractiveChirpFit implements PlugIn {
 		c.insets = new Insets(10, 10, 10, 0);
 		panelFirst.add(inputFieldwidth, c);
 	
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(inputLabelIter, c);
+
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(inputFieldIter, c);
+		
 		//++c.gridy;
 		//c.insets = new Insets(10, 10, 10, 0);
 		//panelFirst.add(Fit, c);
@@ -257,7 +275,7 @@ public class InteractiveChirpFit implements PlugIn {
 		Frequhist.addActionListener(new MakehistListener(this));
 		inputFieldwidth.addTextListener(new WidthListener(this));
 		inputFieldBins.addTextListener(new NumbinsListener(this));
-
+		inputFieldIter.addTextListener(new NumIterListener(this));
 		Cardframe.add(panelCont, BorderLayout.CENTER);
 		Cardframe.add(jpb, BorderLayout.PAGE_END);
 
@@ -300,6 +318,7 @@ public class InteractiveChirpFit implements PlugIn {
 	public void updateCHIRPmute() {
 
 		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
+		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));
 		chirp.setHighfrequency(2 * Math.PI / (Highfrequ * 60));
@@ -327,6 +346,7 @@ public class InteractiveChirpFit implements PlugIn {
 	public void updateCHIRP() {
 
 		FunctionFitter chirp = new FunctionFitter(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
+		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));
 		chirp.setHighfrequency(2 * Math.PI / (Highfrequ * 60));

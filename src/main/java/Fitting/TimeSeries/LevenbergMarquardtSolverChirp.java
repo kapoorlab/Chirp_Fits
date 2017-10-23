@@ -1,11 +1,18 @@
 package Fitting.TimeSeries;
 
+import java.awt.Color;
+import java.util.ArrayList;
+
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
+
+import org.jfree.data.xy.XYSeriesCollection;
 
 import Jama.Matrix;
 import chirpModels.ChirpFitFunction;
 import ij.IJ;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 
 public class LevenbergMarquardtSolverChirp {
 
@@ -60,7 +67,7 @@ public class LevenbergMarquardtSolverChirp {
 	 */
 	public  final int solve(
 			double[] x, 
-			
+			ArrayList<Pair<Double, Double>> timeseries,
 			double[] a,
 			int totaltime,
 			double[] y, 
@@ -182,12 +189,41 @@ public class LevenbergMarquardtSolverChirp {
 				}
 			}
 			
+			if (iter%50 == 0 || iter == 1){
+				if (parent.dataset!=null)
+					parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((na[totaltime]) * 60),6.28/((na[totaltime + 1]) * 60)   ));
 			
-		
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
 
+				Double time = timeseries.get(i).getA();
+
+				poly = na[i]
+						* Math.cos(Math.toRadians(na[totaltime] * time
+								+ (na[totaltime + 1] -na[totaltime]) * time * time
+										/ (2 * totaltime)
+								+ na[totaltime + 2])) + na[totaltime + 3] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		      
+			}
+			
 		} while(!done);
 	//	bw.close();
 	//	fw.close();
+		
+	
 		return iter;
 	} //solve
 	

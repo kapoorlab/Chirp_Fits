@@ -142,7 +142,7 @@ public class FunctionFitterRunnable implements Runnable {
 			
 			LevenbergMarquardtSolverChirp LMsolver = new LevenbergMarquardtSolverChirp(parent, parent.jpb);
 			
-			LMsolver.solve(T, LMparam, timeseries.size(), I, UserChoiceFunction, lambda,
+			LMsolver.solve(T,timeseries, LMparam, timeseries.size(), I, UserChoiceFunction, lambda,
 					termepsilon, maxiter, fileindex, totalfiles);
 		} catch (Exception e1) {
 			e1.printStackTrace();

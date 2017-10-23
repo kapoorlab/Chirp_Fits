@@ -51,36 +51,16 @@ public class NumbinsListener implements TextListener{
 	public void textValueChanged(TextEvent e) {
 		final TextComponent tc = (TextComponent)e.getSource();
 	    
-	    
-		KeyListener ml = new KeyListener() {
-			
-			 @Override
-			    public void keyTyped(KeyEvent arg0) {
-				   
-			    }
-			 @Override
-			    public void keyReleased(KeyEvent arg0) {
-				
-
-			    }
-			 @Override
-			    public void keyPressed(KeyEvent arg0) {
 			    	String s = tc.getText();
 			    	
-			    	if (arg0.getKeyChar() == KeyEvent.VK_ENTER )
-					 {
-			    		
+			    
+	                 if (s.length() > 0)		    		
 					 parent.numBins = (int)Float.parseFloat(s);
 					
 					
 						
 						
-					
-			    }
-			 
-			};
-		};
-			tc.addKeyListener(ml);
+			
 		
 		
 		 

@@ -142,7 +142,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 			
 			LevenbergMarquardtSolverChirp LMsolver = new LevenbergMarquardtSolverChirp(parent, parent.jpb);
 			
-			LMsolver.solve(T, LMparam, timeseries.size(), I, UserChoiceFunction, lambda,
+			LMsolver.solve(T,timeseries, LMparam, timeseries.size(), I, UserChoiceFunction, lambda,
 					termepsilon, maxiter, fileindex, totalfiles);
 		} catch (Exception e1) {
 			e1.printStackTrace();
@@ -165,7 +165,8 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[totaltime]) * 60));
 			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[totaltime + 1]) * 60));
 			parent.rtAll.show("Frequency by Chirp Model Fits");
-			
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
 			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[totaltime]) * 60),6.28/((LMparam[totaltime + 1]) * 60)   ));
 			
 			double poly;
