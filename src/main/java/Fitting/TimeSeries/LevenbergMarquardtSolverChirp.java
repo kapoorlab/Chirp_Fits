@@ -10,6 +10,9 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import Jama.Matrix;
 import chirpModels.ChirpFitFunction;
+import chirpModels.LinearChirp;
+import chirpModels.LinearChirpConstAmp;
+import chirpModels.UserChirpModel.UserModel;
 import ij.IJ;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -74,7 +77,7 @@ public class LevenbergMarquardtSolverChirp {
 			ChirpFitFunction f,
 			double lambda, 
 			double termepsilon, 
-			int maxiter, int fileindex, int totalfiles
+			int maxiter, int fileindex, int totalfiles, UserModel model
 			) throws Exception  {
 		int npts = y.length;
 		int nparm = a.length;
@@ -160,8 +163,7 @@ public class LevenbergMarquardtSolverChirp {
 			System.out.println("LM solver unable to find extrema after" + iter + " iterations");
 			if (iter >= maxiter) done = true;
 
-			if(lambda < 1.0E-15)
-				done = true;
+			
 			
 			// in the C++ version, found that changing this to e1 >= e0
 			// was not a good idea.  See comment there.
@@ -180,19 +182,13 @@ public class LevenbergMarquardtSolverChirp {
 					
 				}
 			}
-			
-			for( int i = 0; i < nparm; i++ ) {
-				if (Math.abs(a[i] - na[i]) < 1.0E-10   ){
-					lambda *= 2;
-				break;
-				
-				}
-			}
+		
 			
 			if (iter%50 == 0 || iter == 1){
 				if (parent.dataset!=null)
 					parent.dataset.removeAllSeries();
-			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((na[totaltime]) * 60),6.28/((na[totaltime + 1]) * 60)   ));
+				
+				if (model == UserModel.Linear){
 			
 			double poly;
 			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
@@ -207,7 +203,7 @@ public class LevenbergMarquardtSolverChirp {
 								+ na[totaltime + 2])) + na[totaltime + 3] ;
 				fitpoly.add(new ValuePair<Double, Double>(time, poly));
 			}
-			
+				
 			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
 			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
 			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
@@ -216,13 +212,186 @@ public class LevenbergMarquardtSolverChirp {
 		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
 		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
-		      
+				}
+				
+				if (model == UserModel.LinearConstAmp){
+					
+					
+					double poly;
+					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+					for (int i = 0; i < timeseries.size(); ++i) {
+
+						Double time = timeseries.get(i).getA();
+
+						poly = na[0]
+								* Math.cos(Math.toRadians(na[1] * time
+										+ (na[2] -na[1]) * time * time
+												/ (2 * totaltime)
+										+ na[3])) + na[4] ;
+						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+					}
+						
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+					
+					
+				}
+				
+                  if (model == UserModel.LinearLinearAmp){
+					
+					
+					double poly;
+					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+					for (int i = 0; i < timeseries.size(); ++i) {
+
+						Double time = timeseries.get(i).getA();
+
+						poly = (na[0] * time + na[1])
+								* Math.cos(Math.toRadians(na[2] * time
+										+ (na[3] - na[2]) * time * time
+												/ (2 * totaltime)
+										+ na[4])) + na[5] ;
+						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+					}
+						
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+					
+					
+				}
+                  
+                  
+                  if (model == UserModel.LinearQuadraticAmp){
+  					
+  					
+  					double poly;
+  					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+  					for (int i = 0; i < timeseries.size(); ++i) {
+
+  						Double time = timeseries.get(i).getA();
+
+  						poly = (na[0] * time * time + na[1] * time + na[2])
+  								* Math.cos(Math.toRadians(na[3] * time
+  										+ (na[4] - na[3]) * time * time
+  												/ (2 * totaltime)
+  										+ na[5])) + na[6] ;
+  						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+  					}
+  						
+  					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+  					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+  					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+  					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+  					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+  				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+  				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+  				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+  					
+  					
+  				}
+                  if (model == UserModel.LinearCubeAmp){
+    					
+    					
+    					double poly;
+    					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+    					for (int i = 0; i < timeseries.size(); ++i) {
+
+    						Double time = timeseries.get(i).getA();
+
+    						poly = (na[0] * time * time * time + na[1] * time * time + na[2] * time + na[3])
+    								* Math.cos(Math.toRadians(na[4] * time
+    										+ (na[5] - na[4]) * time * time
+    												/ (2 * totaltime)
+    										+ na[6])) + na[7] ;
+    						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+    					}
+    						
+    					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+    					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+    					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+    					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+    					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+    				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+    				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+    				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+    					
+    					
+    				}
+                  if (model == UserModel.LinearBiquadAmp){
+  					
+  					
+  					double poly;
+  					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+  					for (int i = 0; i < timeseries.size(); ++i) {
+
+  						Double time = timeseries.get(i).getA();
+
+  						poly = (na[0] * time * time * time * time + na[1] * time * time * time + na[2] * time * time + na[3] * time + na[4])
+  								* Math.cos(Math.toRadians(na[5] * time
+  										+ (na[6] - na[5]) * time * time
+  												/ (2 * totaltime)
+  										+ na[7])) + na[8] ;
+  						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+  					}
+  						
+  					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+  					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+  					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+  					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+  					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+  				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+  				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+  				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+  					
+  					
+  				}
+                  if (model == UserModel.LinearSixthOrderAmp){
+    					
+    					
+    					double poly;
+    					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+    					for (int i = 0; i < timeseries.size(); ++i) {
+
+    						Double time = timeseries.get(i).getA();
+
+    						poly = (na[0] * time * time * time * time* time * time + na[1] * time * time * time* time * time + na[2] * time * time* time * time + na[3] * time* time * time
+    								+ na[4]* time * time + na[5] * time + na[6])
+    								* Math.cos(Math.toRadians(na[7] * time
+    										+ (na[8] - na[7]) * time * time
+    												/ (2 * totaltime)
+    										+ na[9])) + na[10] ;
+    						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+    					}
+    						
+    					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+    					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+    					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+    					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+    					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+    				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+    				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+    				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+    					
+    					
+    				}
+				
 			}
 			
 		} while(!done);
 	//	bw.close();
 	//	fw.close();
-		
 	
 		return iter;
 	} //solve

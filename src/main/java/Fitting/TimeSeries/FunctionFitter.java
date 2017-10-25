@@ -17,8 +17,14 @@ import org.jfree.ui.RectangleEdge;
 
 import chirpModels.ChirpFitFunction;
 import chirpModels.LinearChirp;
+import chirpModels.LinearChirpBiQuadAmp;
+import chirpModels.LinearChirpConstAmp;
+import chirpModels.LinearChirpCubeAmp;
+import chirpModels.LinearChirpLinearAmp;
+import chirpModels.LinearChirpQuadAmp;
+import chirpModels.LinearChirpSixthOrderAmp;
 import chirpModels.UserChirpModel;
-
+import chirpModels.UserChirpModel.UserModel;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
 
@@ -26,8 +32,8 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 	
 	final InteractiveChirpFit parent;
 	final ArrayList<Pair<Double, Double>> timeseries;
-	private final UserChirpModel model;
-	public int maxiter = 1500;
+	private final UserModel model;
+	public int maxiter = 50000;
 	public double lambda = 1e-3;
 	public double termepsilon = 1e-4;
 	double[] LMparam;
@@ -91,7 +97,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 	 * deltat = spacing in time between succeding points
 	 */
 	
-	public FunctionFitter(final InteractiveChirpFit parent, final ArrayList<Pair<Double, Double>> timeseries, UserChirpModel model, final int fileindex,
+	public FunctionFitter(final InteractiveChirpFit parent, final ArrayList<Pair<Double, Double>> timeseries, UserModel model, final int fileindex,
 			final int totalfiles){
 		
 		this.parent = parent;
@@ -99,7 +105,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 		this.model = model;
 		this.fileindex = fileindex;
 		this.totalfiles = totalfiles;
-		
+	
 	}
 	
 	
@@ -129,27 +135,59 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 		}
 		
 	
-		LMparam = ExtractSeries.initialguess(timeseries, timeseries.size(), Lowfrequency, Highfrequency);
 		
 		ChirpFitFunction UserChoiceFunction = null;
-		if (model == UserChirpModel.Linear){
+		if (model == UserModel.Linear){
 			
 			UserChoiceFunction = new LinearChirp();
 			
 		}
-		
+        if (model == UserModel.LinearConstAmp){
+			
+			UserChoiceFunction = new LinearChirpConstAmp();
+			
+		}
+        if (model == UserModel.LinearLinearAmp){
+			
+			UserChoiceFunction = new LinearChirpLinearAmp();
+			
+		}
+        if (model == UserModel.LinearQuadraticAmp){
+			
+			UserChoiceFunction = new LinearChirpQuadAmp();
+			
+		}
+        if (model == UserModel.LinearCubeAmp){
+			
+			UserChoiceFunction = new LinearChirpCubeAmp();
+			
+		}
+           if (model == UserModel.LinearBiquadAmp){
+			
+			UserChoiceFunction = new LinearChirpBiQuadAmp();
+			
+		}
+           
+           if (model == UserModel.LinearSixthOrderAmp){
+   			
+   			UserChoiceFunction = new LinearChirpSixthOrderAmp();
+   			
+   		}
+
+		LMparam = ExtractSeries.initialguess(timeseries, timeseries.size(), Lowfrequency, Highfrequency, model);
+		System.out.println("paramlength"+ LMparam.length);
 		try {
 			
 			LevenbergMarquardtSolverChirp LMsolver = new LevenbergMarquardtSolverChirp(parent, parent.jpb);
 			
 			LMsolver.solve(T,timeseries, LMparam, timeseries.size(), I, UserChoiceFunction, lambda,
-					termepsilon, maxiter, fileindex, totalfiles);
+					termepsilon, maxiter, fileindex, totalfiles, model);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 		
 		int totaltime = timeseries.size();
-	
+		if (model == UserModel.Linear){
 			System.out.println("Frequency (hrs):" + 6.28/((LMparam[totaltime]) * 60));
 			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[totaltime + 1]) * 60));
 			System.out.println("Phase:" + ((LMparam[totaltime + 2])));
@@ -165,6 +203,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[totaltime]) * 60));
 			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[totaltime + 1]) * 60));
 			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
 			if (parent.dataset!=null)
 				parent.dataset.removeAllSeries();
 			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[totaltime]) * 60),6.28/((LMparam[totaltime + 1]) * 60)   ));
@@ -190,7 +229,272 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
 		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
-		       
+		}
+		
+		
+		if (model == UserModel.LinearConstAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[1]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[1 + 1]) * 60));
+			System.out.println("Phase:" + ((LMparam[1 + 2])));
+			System.out.println("Back:" + ((LMparam[1 + 3])));
+
+
+			System.out.println("Frequency :" + LMparam[1]);
+			System.out.println("Chirp Frequ  :" + LMparam[1 + 1]);
+			System.out.println("Phase:" + ((LMparam[1 + 2])));
+			System.out.println("Back:" + ((LMparam[1 + 3])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[1]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[1 + 1]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[1]) * 60),6.28/((LMparam[2]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = LMparam[0]
+						* Math.cos(Math.toRadians(LMparam[1] * time
+								+ (LMparam[1 + 1] -LMparam[1]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[1 + 2])) + LMparam[1 + 3] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		
+		if (model == UserModel.LinearLinearAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[2]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[3]) * 60));
+			System.out.println("Phase:" + ((LMparam[4])));
+			System.out.println("Back:" + ((LMparam[5])));
+
+
+			System.out.println("Frequency :" + LMparam[2]);
+			System.out.println("Chirp Frequ  :" + LMparam[3]);
+			System.out.println("Phase:" + ((LMparam[4])));
+			System.out.println("Back:" + ((LMparam[5])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[2]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[3]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[2]) * 60),6.28/((LMparam[3]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = (LMparam[0]*time + LMparam[1])
+						* Math.cos(Math.toRadians(LMparam[2] * time
+								+ (LMparam[3] -LMparam[2]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[4])) + LMparam[5] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		
+		if (model == UserModel.LinearQuadraticAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[3]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[4]) * 60));
+			System.out.println("Phase:" + ((LMparam[5])));
+			System.out.println("Back:" + ((LMparam[6])));
+
+
+			System.out.println("Frequency :" + LMparam[3]);
+			System.out.println("Chirp Frequ  :" + LMparam[4]);
+			System.out.println("Phase:" + ((LMparam[5])));
+			System.out.println("Back:" + ((LMparam[6])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[3]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[4]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[3]) * 60),6.28/((LMparam[4]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = (LMparam[0]*time * time + LMparam[1] * time + LMparam[2])
+						* Math.cos(Math.toRadians(LMparam[3] * time
+								+ (LMparam[4] -LMparam[3]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[5])) + LMparam[6] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		
+		if (model == UserModel.LinearCubeAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[4]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[5]) * 60));
+			System.out.println("Phase:" + ((LMparam[6])));
+			System.out.println("Back:" + ((LMparam[7])));
+
+
+			System.out.println("Frequency :" + LMparam[4]);
+			System.out.println("Chirp Frequ  :" + LMparam[5]);
+			System.out.println("Phase:" + ((LMparam[6])));
+			System.out.println("Back:" + ((LMparam[7])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[4]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[5]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[4]) * 60),6.28/((LMparam[5]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = (LMparam[0]*time * time * time + LMparam[1] * time * time + LMparam[2] * time + LMparam[3])
+						* Math.cos(Math.toRadians(LMparam[4] * time
+								+ (LMparam[5] -LMparam[4]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[6])) + LMparam[7] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		if (model == UserModel.LinearBiquadAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[5]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[6]) * 60));
+			System.out.println("Phase:" + ((LMparam[7])));
+			System.out.println("Back:" + ((LMparam[8])));
+
+
+			System.out.println("Frequency :" + LMparam[5]);
+			System.out.println("Chirp Frequ  :" + LMparam[4]);
+			System.out.println("Phase:" + ((LMparam[7])));
+			System.out.println("Back:" + ((LMparam[8])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[5]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[6]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[5]) * 60),6.28/((LMparam[6]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = (LMparam[0]*time * time * time * time + LMparam[1] * time * time * time + LMparam[2] * time * time + LMparam[3] * time + LMparam[4])
+						* Math.cos(Math.toRadians(LMparam[5] * time
+								+ (LMparam[6] -LMparam[5]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[7])) + LMparam[8] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		if (model == UserModel.LinearSixthOrderAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[7]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[8]) * 60));
+			System.out.println("Phase:" + ((LMparam[9])));
+			System.out.println("Back:" + ((LMparam[10])));
+
+
+			System.out.println("Frequency :" + LMparam[7]);
+			System.out.println("Chirp Frequ  :" + LMparam[8]);
+			System.out.println("Phase:" + ((LMparam[9])));
+			System.out.println("Back:" + ((LMparam[10])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[7]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[8]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
+		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[7]) * 60),6.28/((LMparam[8]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				poly = (LMparam[0]*time * time * time * time * time * time + LMparam[1] * time * time * time * time * time + LMparam[2] * time * time* time * time 
+						+ LMparam[3] * time * time * time + LMparam[4] * time * time + LMparam[5] * time + LMparam[6])
+						* Math.cos(Math.toRadians(LMparam[7] * time
+								+ (LMparam[8] -LMparam[7]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[9])) + LMparam[10] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+		
 		return null;
 	}
 
@@ -200,7 +504,7 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 	protected void done() {
 		try {
 			
-			
+			if (model == UserModel.Linear){
 				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
 			 + parent.nf.format(6.28/((LMparam[timeseries.size()]) * 60)) + "  " +  "High Frequency  (hrs): " 
 						 + parent.nf.format(6.28/((LMparam[timeseries.size() + 1]) * 60) ));
@@ -208,7 +512,63 @@ public class FunctionFitter extends SwingWorker<Void, Void> {
 				 parent.chart.addSubtitle(legendText);
 				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
 				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
 			
+			if (model == UserModel.LinearConstAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[1]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[2]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
+			if (model == UserModel.LinearLinearAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[2]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[3]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
+			if (model == UserModel.LinearQuadraticAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[3]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[4]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
+			if (model == UserModel.LinearCubeAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[4]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[5]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
+			if (model == UserModel.LinearBiquadAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[5]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[6]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
+			
+			if (model == UserModel.LinearSixthOrderAmp){
+				 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
+			 + parent.nf.format(6.28/((LMparam[7]) * 60)) + "  " +  "High Frequency  (hrs): " 
+						 + parent.nf.format(6.28/((LMparam[8]) * 60) ));
+				 legendText.setPosition(RectangleEdge.RIGHT);
+				 parent.chart.addSubtitle(legendText);
+				 String name = parent.inputfile.getParent() + "//" +  parent.inputfile.getName().replaceFirst("[.][^.]+$", "") + "Fits";
+				ChartUtilities.saveChartAsPNG(new File(name + ".png"),  parent.chart, 800, 800);
+			}
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

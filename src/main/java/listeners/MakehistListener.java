@@ -67,6 +67,7 @@ public class MakehistListener implements ActionListener {
 
 		
 		final JFreeChart histMeanchart = makehistChart(Meanfrequvalues, "Histogram", "MeanFrequ", "Count");
+		
 		display(histMeanchart, new Dimension(500, 500));
 		
 

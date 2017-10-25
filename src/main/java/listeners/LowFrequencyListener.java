@@ -22,8 +22,7 @@ public class LowFrequencyListener implements AdjustmentListener {
 	
 	public void adjustmentValueChanged( final AdjustmentEvent event )
 	{
-		if (parent.dataset!=null)
-		parent.dataset.removeAllSeries();
+		
 		parent.Lowfrequ = InteractiveChirpFit.computeValueFromScrollbarPosition(
 				event.getValue(),
 				InteractiveChirpFit.MAX_SLIDER,

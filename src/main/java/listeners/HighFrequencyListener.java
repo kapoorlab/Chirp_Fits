@@ -24,7 +24,7 @@ public class HighFrequencyListener implements AdjustmentListener {
 	@Override
 	public void adjustmentValueChanged( final AdjustmentEvent event )
 	{
-		parent.dataset.removeAllSeries();
+	
 		
 		
 		parent.Highfrequ = InteractiveChirpFit.computeValueFromScrollbarPosition(

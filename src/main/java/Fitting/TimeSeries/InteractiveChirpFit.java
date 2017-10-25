@@ -41,6 +41,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 
 import chirpModels.UserChirpModel;
+import chirpModels.UserChirpModel.UserModel;
 import ij.IJ;
 import ij.ImageJ;
 import ij.measure.ResultsTable;
@@ -81,13 +82,13 @@ public class InteractiveChirpFit implements PlugIn {
 	public static double MIN_CHIRP = 0.0;
 	public static double MAX_CHIRP = 40.0;
 	public boolean enableHigh = false;
-	public double Lowfrequ = 6.28 / (0.03 * 60);
-	public double Highfrequ = Lowfrequ / 1.5;
+	public double Lowfrequ = 6.28 / (0.04 * 60);
+	public double Highfrequ = Lowfrequ / 2;
 	public double phase = 0;
 	public double back = 0;
 
 	public int numBins = 10;
-	public int maxiter = 1500;
+	public int maxiter = 20000;
 	public JProgressBar jpb;
 	public JLabel label = new JLabel("Fitting..");
 	public int Progressmin = 0;
@@ -182,7 +183,7 @@ public class InteractiveChirpFit implements PlugIn {
 		inputLabelwidth = new JLabel("Enter expected peak width in hours");
 		inputFieldwidth = new TextField();
 		inputFieldwidth.setColumns(5);
-		inputFieldwidth.setText(String.valueOf(1.5));
+		inputFieldwidth.setText(String.valueOf(2));
 		
 		inputLabelBins = new JLabel("Set number of Bins, presss enter to display mean Frequency histogram");
 		inputFieldBins = new TextField();
@@ -317,7 +318,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public void updateCHIRPmute() {
 
-		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
+		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, UserModel.LinearSixthOrderAmp, row, inputfiles.length);
 		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));
@@ -328,8 +329,8 @@ public class InteractiveChirpFit implements PlugIn {
 		double[] LMparam = chirp.result();
 		
 		 TextTitle legendText = new TextTitle("Low Frequency (hrs): " 
-	  			 + nf.format(6.28/((LMparam[timeseries.size()]) * 60)) + "  " +  "High Frequency  (hrs): " 
-	  						 + nf.format(6.28/((LMparam[timeseries.size() + 1]) * 60) ));
+	  			 + nf.format(6.28/((LMparam[7]) * 60)) + "  " +  "High Frequency  (hrs): " 
+	  						 + nf.format(6.28/((LMparam[8]) * 60) ));
 	  				 legendText.setPosition(RectangleEdge.RIGHT);
 	  				 if (chart!=null){
 	  				 chart.addSubtitle(legendText);
@@ -345,7 +346,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public void updateCHIRP() {
 
-		FunctionFitter chirp = new FunctionFitter(this, timeseries, UserChirpModel.Linear, row, inputfiles.length);
+		FunctionFitter chirp = new FunctionFitter(this, timeseries, UserModel.LinearSixthOrderAmp, row, inputfiles.length);
 		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));

@@ -33,8 +33,7 @@ public class AutoListener implements ActionListener {
 		
 		}
         taskexecutor.shutdown();
-        JOptionPane.showMessageDialog(parent.jpb.getParent(), "Success", "Success",
-    			 JOptionPane.INFORMATION_MESSAGE);
+       
 		
 	}
 	
