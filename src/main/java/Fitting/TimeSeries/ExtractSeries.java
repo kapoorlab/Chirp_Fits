@@ -134,6 +134,7 @@ public class ExtractSeries {
 		return initialparameters;
 		}
 		
+			
 		
 		if (model == UserModel.LinearConstAmp){
 			

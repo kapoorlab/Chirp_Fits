@@ -234,7 +234,7 @@ public class FunctionFitterRunnable implements Runnable {
 		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
 		}
-		
+
 		
 		if (model == UserModel.LinearConstAmp){
 			System.out.println("Frequency (hrs):" + 6.28/((LMparam[1]) * 60));
