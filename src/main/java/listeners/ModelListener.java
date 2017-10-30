@@ -33,28 +33,19 @@ import chirpModels.UserChirpModel.UserModel;
 			
 			if (selectedindex == 0){
 				
-				parent.model = UserModel.LinearLinearAmp;
-				
+				parent.model = UserModel.LinearPolyAmp;
+				parent.setdegreeenabled(true);
 			}
 			
 			
 			if (selectedindex == 1){
 				
-				parent.model = UserModel.LinearBiquadAmp;
-				
-			}
-			
-			if (selectedindex == 2){
-				
-				parent.model = UserModel.LinearSixthOrderAmp;
-				
-			}
-			
-            if (selectedindex == 3){
-				
 				parent.model = UserModel.Linear;
+				parent.setdegreeenabled(false);
 				
 			}
+			
+			
 			
 			
 			

@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.CardLayout;
 import java.awt.Checkbox;
+import java.awt.CheckboxGroup;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -48,6 +50,7 @@ import ij.ImageJ;
 import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import listeners.AutoListener;
+import listeners.DegreeListener;
 import listeners.Enablehigh;
 import listeners.FitListener;
 import listeners.HighFrequencyListener;
@@ -56,6 +59,8 @@ import listeners.MakehistListener;
 import listeners.ModelListener;
 import listeners.NumIterListener;
 import listeners.NumbinsListener;
+import listeners.RunPolyListener;
+import listeners.RunRandomListener;
 import listeners.WidthListener;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
@@ -74,6 +79,8 @@ public class InteractiveChirpFit implements PlugIn {
 	// for scrollbars
 	int FrequInt, ChirpInt, PhaseInt, BackInt;
 
+	public boolean polymode = true;
+	public boolean randommode = false;
 	public boolean isDone;
 	public static int MIN_SLIDER = 0;
 	public static int MAX_SLIDER = 500;
@@ -90,7 +97,11 @@ public class InteractiveChirpFit implements PlugIn {
 	public double back = 0;
 
 	public int numBins = 10;
-	public int maxiter = 20000;
+	public int degree = 2;
+	public JLabel degreelabel = new JLabel("Amplitude Polynomial degree");
+	public TextField degreetext;
+	
+	public int maxiter = 5000;
 	public JProgressBar jpb;
 	public JLabel label = new JLabel("Fitting..");
 	public int Progressmin = 0;
@@ -128,7 +139,7 @@ public class InteractiveChirpFit implements PlugIn {
 		frequchirphist = new ArrayList<Pair<Double, Double>>();
 		rtAll = new ResultsTable();
 		jpb = new JProgressBar();
-
+		model = UserModel.LinearPolyAmp;
 		Card();
 	}
 
@@ -170,8 +181,13 @@ public class InteractiveChirpFit implements PlugIn {
 		panelCont.add(panelFirst, "1");
 
 		panelFirst.setName("Chirp Fits");
-		String[] Model = { "Linear Intensity", "BiQuadratic Intensity","SixthOrderPoly Intensity", "OverFit Intensity" };
-		ChooseModel = new JComboBox<String>(Model);
+		
+		CheckboxGroup mode = new CheckboxGroup();
+		
+		final Checkbox Polynomial = new Checkbox("Polynomial Amplitude", mode, polymode);
+		final Checkbox Random = new Checkbox("Random Amplitude", mode, randommode);
+		
+		
 		/* Instantiation */
 		final GridBagLayout layout = new GridBagLayout();
 		final GridBagConstraints c = new GridBagConstraints();
@@ -200,7 +216,9 @@ public class InteractiveChirpFit implements PlugIn {
 		inputFieldIter.setColumns(5);
 		inputFieldIter.setText(String.valueOf(maxiter));
 		
-		
+		degreetext = new TextField();
+		degreetext.setColumns(5);
+		degreetext.setText(String.valueOf(degree));
 		
 		
 
@@ -214,7 +232,21 @@ public class InteractiveChirpFit implements PlugIn {
 		c.weightx = 1;
 		++c.gridy;
 		c.insets = new Insets(10, 10, 10, 0);
-		panelFirst.add(ChooseModel, c);
+		panelFirst.add(Polynomial, c);
+		
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(Random, c);
+		
+		
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(degreelabel, c);
+
+		++c.gridy;
+		c.insets = new Insets(10, 10, 10, 0);
+		panelFirst.add(degreetext, c);
+		
 		
 		++c.gridy;
 		c.insets = new Insets(10, 10, 0, 50);
@@ -286,10 +318,13 @@ public class InteractiveChirpFit implements PlugIn {
 		CHIRP.addAdjustmentListener(new HighFrequencyListener(this, CHIRPLabel, CHIRP));
 		Fit.addActionListener(new FitListener(this));
 		AutoFit.addActionListener(new AutoListener(this));
-		  ChooseModel.addActionListener(new ModelListener(this, ChooseModel));
+		
+		Polynomial.addItemListener(new RunPolyListener(this));
+		Random.addItemListener(new RunRandomListener(this));
 		Frequhist.addActionListener(new MakehistListener(this));
 		inputFieldwidth.addTextListener(new WidthListener(this));
 		inputFieldBins.addTextListener(new NumbinsListener(this));
+		degreetext.addTextListener(new DegreeListener(this));
 		inputFieldIter.addTextListener(new NumIterListener(this));
 		Cardframe.add(panelCont, BorderLayout.CENTER);
 		Cardframe.add(jpb, BorderLayout.PAGE_END);
@@ -315,6 +350,29 @@ public class InteractiveChirpFit implements PlugIn {
 
 	}
 
+	
+	public void setdegreeenabled(final boolean state){
+		
+		if(state){
+			if(!degreetext.isEnabled()){
+			this.degreelabel.setEnabled(state);
+			this.degreetext.setEnabled(state);
+			}
+			
+		}
+		else{
+			if(degreetext.isEnabled()){
+				
+				this.degreelabel.setEnabled(false);
+				this.degreetext.setEnabled(false);
+			}
+			
+			
+		}
+		
+		
+	}
+	
 	public void displaymuteclicked(final int trackindex) {
 
 		inputfile = inputfiles[trackindex];
@@ -332,7 +390,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public void updateCHIRPmute() {
 
-		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, model, row, inputfiles.length);
+		FunctionFitterRunnable chirp = new FunctionFitterRunnable(this, timeseries, model, row, inputfiles.length, degree);
 		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));
@@ -347,7 +405,7 @@ public class InteractiveChirpFit implements PlugIn {
 
 	public void updateCHIRP() {
 
-		FunctionFitter chirp = new FunctionFitter(this, timeseries, model, row, inputfiles.length);
+		FunctionFitter chirp = new FunctionFitter(this, timeseries, model, row, inputfiles.length, degree);
 		chirp.setMaxiter(maxiter);
 		chirp.checkInput();
 		chirp.setLowfrequency(2 * Math.PI / (Lowfrequ * 60));

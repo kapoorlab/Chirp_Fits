@@ -2,7 +2,7 @@ package chirpModels;
 
 public class LinearChirpSixthOrderAmp implements ChirpFitFunction {
 
-	public double val(double t, double[] a, int totaltime, int timeindex) {
+	public double val(double t, double[] a, int totaltime, int timeindex, int degree) {
 
 		double Sinusoid = (a[0] * t * t * t * t * t * t + a[1] * t * t * t * t * t + a[2] * t * t * t * t + a[3] * t * t * t + a[4] * t * t + a[5] * t + a[6]  ) * 
 				Math.cos(Math.toRadians(a[7] * t + (a[8] - a[7])* t * t / (2 * totaltime) 
@@ -15,7 +15,7 @@ public class LinearChirpSixthOrderAmp implements ChirpFitFunction {
 	 * Gradient function
 	 * 
 	 */
-	public double grad(double t, double[] a, int totaltime, int k, int timeindex) {
+	public double grad(double t, double[] a, int totaltime, int k, int timeindex, int degree) {
 
 		if (k == 0) {
 

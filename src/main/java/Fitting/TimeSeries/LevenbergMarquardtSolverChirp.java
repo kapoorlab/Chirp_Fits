@@ -46,7 +46,7 @@ public class LevenbergMarquardtSolverChirp {
 		double sum = 0.;
 
 		for( int i = 0; i < npts; i++ ) {
-			double d = y[i] - f.val(x[i], a, totaltime, i);
+			double d = y[i] - f.val(x[i], a, totaltime, i, parent.degree);
 			sum = sum + (d*d);
 		}
 
@@ -105,7 +105,7 @@ public class LevenbergMarquardtSolverChirp {
 					for( int i = 0; i < npts; i++ ) {
 						double xi = x[i];
 						
-						H[r][c] += f.grad(xi, a, totaltime, r , i) * f.grad(xi, a, totaltime, c , i);
+						H[r][c] += f.grad(xi, a, totaltime, r , i, parent.degree) * f.grad(xi, a, totaltime, c , i, parent.degree);
 					}  //npts
 				} //c
 			} //r
@@ -119,7 +119,7 @@ public class LevenbergMarquardtSolverChirp {
 				g[r] = 0.;
 				for( int i = 0; i < npts; i++ ) {
 					double xi = x[i];
-					g[r] += (y[i]-f.val(xi,a, totaltime, i)) * f.grad(xi, a, totaltime, r, i);
+					g[r] += (y[i]-f.val(xi,a, totaltime, i, parent.degree)) * f.grad(xi, a, totaltime, r, i, parent.degree);
 				
 				}
 				
@@ -213,7 +213,45 @@ public class LevenbergMarquardtSolverChirp {
 		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
 				}
+				if (model == UserModel.LinearPolyAmp){
+					
 				
+					if (parent.dataset!=null)
+						parent.dataset.removeAllSeries();
+					parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((na[parent.degree + 1]) * 60),6.28/((na[parent.degree + 2]) * 60)   ));
+					
+					double poly;
+					final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+					
+					
+					
+						
+						
+					for (int i = 0; i < timeseries.size(); ++i) {
+						double polynom = 0;
+						Double time = timeseries.get(i).getA();
+
+						
+						for (int j = parent.degree; j>=0; --j){
+							polynom+= na[j] * Math.pow(time, j);
+							
+						}
+						poly = polynom
+								* Math.cos(Math.toRadians(na[parent.degree + 1] * time
+										+ (na[parent.degree + 2] -na[parent.degree + 1]) * time * time
+												/ (2 * totaltime)
+										+ na[parent.degree + 3])) + na[parent.degree + 4] ;
+						fitpoly.add(new ValuePair<Double, Double>(time, poly));
+					}
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+					parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+					Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+					Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+					  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+				       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+				       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+				       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+				}
 				if (model == UserModel.LinearConstAmp){
 					
 					

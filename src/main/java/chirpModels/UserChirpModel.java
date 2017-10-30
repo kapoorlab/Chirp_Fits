@@ -6,7 +6,7 @@ public class UserChirpModel {
 	
 	public static enum UserModel{
 		
-		Linear, LinearConstAmp, LinearLinearAmp, LinearQuadraticAmp, LinearCubeAmp, LinearBiquadAmp, LinearSixthOrderAmp;
+		Linear, LinearConstAmp, LinearLinearAmp, LinearQuadraticAmp, LinearCubeAmp, LinearBiquadAmp, LinearSixthOrderAmp, LinearPolyAmp;
 		
 	}
 	
@@ -19,4 +19,5 @@ public class UserChirpModel {
 	protected static UserModel LinearCubeAmp;
 	protected static UserModel LinearBiquadAmp;
 	protected static UserModel LinearSixthOrderAmp;
+	protected static UserModel LinearPolyAmp;
 }

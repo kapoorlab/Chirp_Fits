@@ -96,7 +96,7 @@ public class ExtractSeries {
 	}
 
 	public static double[] initialguess(ArrayList< Pair< Double, Double > > points,
-			final int totaltime, double Lowfrequency, double Highfrequency, UserModel model){
+			final int totaltime, final int degree, double Lowfrequency, double Highfrequency, UserModel model){
 		
 	
 		if (model == UserModel.Linear){
@@ -134,6 +134,47 @@ public class ExtractSeries {
 		return initialparameters;
 		}
 		
+		if (model == UserModel.LinearPolyAmp){
+			
+			double[] initialparameters = new double[degree + 5];
+			
+			
+			
+			
+			double Frequency = Lowfrequency;
+			double endChirp =  Highfrequency ;
+			
+			double phase = 0;
+			
+			double min = Double.MAX_VALUE;
+			double max = Double.MIN_VALUE;
+			
+			
+			for (final Pair< Double, Double > p : points){
+				
+				min = Math.min(min, p.getB());
+				max = Math.max(max, p.getB());
+			}
+			
+		
+				
+			for (int j = degree; j > 0; --j){
+				
+				initialparameters[j] = (max - min) *Math.exp(-Math.pow(j,2));
+			}
+			
+			initialparameters[0] = (max + min)/2;
+			
+			
+			initialparameters[degree + 1] = Frequency;
+			initialparameters[degree + 2] = endChirp;
+			initialparameters[degree + 3] = phase;
+			initialparameters[degree + 4] = min;
+			
+			return initialparameters;
+			
+			
+		}
 			
 		
 		if (model == UserModel.LinearConstAmp){

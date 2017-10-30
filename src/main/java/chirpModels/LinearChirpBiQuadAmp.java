@@ -2,7 +2,7 @@ package chirpModels;
 
 public class LinearChirpBiQuadAmp implements ChirpFitFunction {
 
-	public double val(double t, double[] a, int totaltime, int timeindex) {
+	public double val(double t, double[] a, int totaltime, int timeindex, int degree) {
 
 		double Sinusoid = (a[0] * t * t * t * t + a[1] * t * t * t + a[2] * t * t + a[3] * t + a[4] ) * Math.cos(Math.toRadians(a[5] * t + (a[6] - a[5])* t * t / (2 * totaltime) 
 				+ a[7])) + a[8];
@@ -14,7 +14,7 @@ public class LinearChirpBiQuadAmp implements ChirpFitFunction {
 	 * Gradient function
 	 * 
 	 */
-	public double grad(double t, double[] a, int totaltime, int k, int timeindex) {
+	public double grad(double t, double[] a, int totaltime, int k, int timeindex, int degree) {
 
 		if (k == 0) {
 

@@ -21,6 +21,7 @@ import chirpModels.LinearChirpBiQuadAmp;
 import chirpModels.LinearChirpConstAmp;
 import chirpModels.LinearChirpCubeAmp;
 import chirpModels.LinearChirpLinearAmp;
+import chirpModels.LinearChirpPolyAmp;
 import chirpModels.LinearChirpQuadAmp;
 import chirpModels.LinearChirpSixthOrderAmp;
 import chirpModels.UserChirpModel;
@@ -41,6 +42,7 @@ public class FunctionFitterRunnable implements Runnable {
 	public double Highfrequency = 0.03;
 	public final int fileindex;
 	public final int totalfiles;
+	public final int degree;
 	
 	
 	
@@ -99,13 +101,14 @@ public class FunctionFitterRunnable implements Runnable {
 	
 	public FunctionFitterRunnable(final InteractiveChirpFit parent, final ArrayList<Pair<Double, Double>> timeseries, 
 			UserModel model, final int fileindex,
-			final int totalfiles){
+			final int totalfiles, final int degree){
 		
 		this.parent = parent;
 		this.timeseries = timeseries;
 		this.model = model;
 		this.fileindex = fileindex;
 		this.totalfiles = totalfiles;
+		this.degree = degree;
 		
 	}
 	
@@ -176,8 +179,18 @@ public class FunctionFitterRunnable implements Runnable {
 	   			UserChoiceFunction = new LinearChirpSixthOrderAmp();
 	   			
 	   		}
+		  
+		  if (model == UserModel.LinearPolyAmp){
+       	   
+       	   UserChoiceFunction = new LinearChirpPolyAmp();
+          }
 
-		LMparam = ExtractSeries.initialguess(timeseries, timeseries.size(), Lowfrequency, Highfrequency, model);
+		  
+		  if (model!= UserModel.LinearPolyAmp)
+				LMparam = ExtractSeries.initialguess(timeseries, timeseries.size(), 0,  Lowfrequency, Highfrequency, model);
+		           
+		           else
+		       		LMparam = ExtractSeries.initialguess(timeseries, timeseries.size(), degree,  Lowfrequency, Highfrequency, model); 
 		
 		try {
 			
@@ -235,7 +248,59 @@ public class FunctionFitterRunnable implements Runnable {
 		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
 		}
 
+		if (model == UserModel.LinearPolyAmp){
+			System.out.println("Frequency (hrs):" + 6.28/((LMparam[degree + 1]) * 60));
+			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[degree + 2]) * 60));
+			System.out.println("Phase:" + ((LMparam[degree + 3])));
+			System.out.println("Back:" + ((LMparam[degree + 4])));
+
+
+			System.out.println("Frequency :" + LMparam[degree + 1]);
+			System.out.println("Chirp Frequ  :" + LMparam[degree + 2]);
+			System.out.println("Phase:" + ((LMparam[degree + 3])));
+			System.out.println("Back:" + ((LMparam[degree + 4])));
+			
+			parent.rtAll.incrementCounter();
+			parent.rtAll.addValue("Low Frequency (hrs):" , 6.28/((LMparam[degree + 1]) * 60));
+			parent.rtAll.addValue("High Frequency  (hrs):" , 6.28/((LMparam[degree + 2]) * 60));
+			parent.rtAll.show("Frequency by Chirp Model Fits");
 		
+			if (parent.dataset!=null)
+				parent.dataset.removeAllSeries();
+			parent.frequchirphist.add(new ValuePair<Double, Double> (6.28/((LMparam[degree + 1]) * 60),6.28/((LMparam[degree + 2]) * 60)   ));
+			
+			double poly;
+			final ArrayList<Pair<Double, Double>> fitpoly = new ArrayList<Pair<Double, Double>>();
+			
+			
+			
+				
+				
+			for (int i = 0; i < timeseries.size(); ++i) {
+
+				Double time = timeseries.get(i).getA();
+
+				double polynom = 0;
+				for (int j = degree; j>=0; --j)
+					polynom+= LMparam[j] * Math.pow(time, j);
+				
+				poly = polynom
+						* Math.cos(Math.toRadians(LMparam[degree + 1] * time
+								+ (LMparam[degree + 2] -LMparam[degree + 1]) * time * time
+										/ (2 * totaltime)
+								+ LMparam[degree + 3])) + LMparam[degree + 4] ;
+				fitpoly.add(new ValuePair<Double, Double>(time, poly));
+			}
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(timeseries));
+			parent.dataset.addSeries(Mainpeakfitter.drawPoints(fitpoly, "Fits"));
+			Mainpeakfitter.setColor(parent.chart, 1, new Color(255, 255, 64));
+			Mainpeakfitter.setStroke(parent.chart, 1, 2f);
+			  Mainpeakfitter.setColor(parent.chart, 0, new Color(64, 64, 64));
+		       Mainpeakfitter.setStroke(parent.chart, 0, 2f);
+		       Mainpeakfitter.setDisplayType(parent.chart, 0, false, true);
+		       Mainpeakfitter.setSmallUpTriangleShape(parent.chart, 0);
+		}
+
 		if (model == UserModel.LinearConstAmp){
 			System.out.println("Frequency (hrs):" + 6.28/((LMparam[1]) * 60));
 			System.out.println("Chirp Frequ  (hrs):" + 6.28/((LMparam[2]) * 60));
