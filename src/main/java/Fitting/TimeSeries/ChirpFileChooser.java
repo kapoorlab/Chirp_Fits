@@ -27,7 +27,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class ChirpFileChooser
   extends JPanel
 {
-  JPanel panelCont = new JPanel();
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+JPanel panelCont = new JPanel();
   JPanel panelIntro = new JPanel();
   JFileChooser chooserA;
   String choosertitleA;

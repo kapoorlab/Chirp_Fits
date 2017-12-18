@@ -57,22 +57,6 @@ import net.imglib2.util.Pair;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeriesCollection;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 public class InteractiveChirpFit
   implements PlugIn
 {
